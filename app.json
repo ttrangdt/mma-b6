@@ -33,8 +33,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "firebase-user-fcm-demo"
+        "projectId": "a9d80511-e7e7-47bd-a457-effad6bdfd32"
       }
-    }
+    },
+    "owner": "ttrang2432"
   }
 }
