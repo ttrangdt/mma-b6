@@ -12,8 +12,6 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../config/firebase';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -54,8 +52,7 @@ export default function RegisterScreen({ onNavigateLogin }) {
     setLoading(true);
     try {
       // 1. Tạo tài khoản trong Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
+      const userCredential = await auth.createUserWithEmailAndPassword(
         email.trim(),
         password
       );
@@ -65,13 +62,13 @@ export default function RegisterScreen({ onNavigateLogin }) {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
 
       // 2. Cập nhật DisplayName trong Firebase Auth
-      await updateProfile(user, {
+      await user.updateProfile({
         displayName: fullName.trim(),
         photoURL: defaultAvatar,
       });
 
       // 3. Lưu thông tin đầy đủ vào Firestore: email, số điện thoại, địa chỉ, họ tên
-      await setDoc(doc(db, 'users', user.uid), {
+      await db.collection('users').doc(user.uid).set({
         uid: user.uid,
         fullName: fullName.trim(),
         email: email.trim(),
@@ -122,7 +119,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
         </View>
 
         <View style={styles.form}>
-          {/* Họ tên */}
           <Text style={styles.label}>Họ và tên *</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="person-outline" size={20} color="#64748b" style={styles.icon} />
@@ -135,7 +131,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             />
           </View>
 
-          {/* Email */}
           <Text style={styles.label}>Email *</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.icon} />
@@ -150,7 +145,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             />
           </View>
 
-          {/* Số điện thoại */}
           <Text style={styles.label}>Số điện thoại</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="call-outline" size={20} color="#64748b" style={styles.icon} />
@@ -164,7 +158,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             />
           </View>
 
-          {/* Địa chỉ */}
           <Text style={styles.label}>Địa chỉ</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="location-outline" size={20} color="#64748b" style={styles.icon} />
@@ -177,7 +170,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             />
           </View>
 
-          {/* Mật khẩu */}
           <Text style={styles.label}>Mật khẩu *</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.icon} />
@@ -201,7 +193,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             </TouchableOpacity>
           </View>
 
-          {/* Xác nhận mật khẩu */}
           <Text style={styles.label}>Xác nhận Mật khẩu *</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="shield-checkmark-outline" size={20} color="#64748b" style={styles.icon} />
@@ -215,7 +206,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             />
           </View>
 
-          {/* Nút Đăng ký */}
           <TouchableOpacity
             style={styles.registerBtn}
             onPress={handleRegister}
@@ -231,7 +221,6 @@ export default function RegisterScreen({ onNavigateLogin }) {
             )}
           </TouchableOpacity>
 
-          {/* Quay lại Đăng nhập */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Đã có tài khoản?</Text>
             <TouchableOpacity onPress={onNavigateLogin}>

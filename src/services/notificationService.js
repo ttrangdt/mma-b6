@@ -2,7 +2,6 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 // Cấu hình cách ứng dụng hiển thị thông báo khi đang mở (Foreground)
@@ -20,31 +19,30 @@ Notifications.setNotificationHandler({
 export async function registerForPushNotificationsAsync() {
   let token = null;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Default Notifications',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#f59e0b',
-    });
-  }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+  try {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Default Notifications',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#f59e0b',
+      });
     }
 
-    if (finalStatus !== 'granted') {
-      console.warn('Không được cấp quyền nhận thông báo đẩy!');
-      return null;
-    }
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-    try {
-      // Lấy Expo Push Token (hoặc FCM token tương ứng cho Expo)
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.warn('Không được cấp quyền nhận thông báo đẩy!');
+        return null;
+      }
+
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ??
         Constants?.easConfig?.projectId;
@@ -53,18 +51,11 @@ export async function registerForPushNotificationsAsync() {
         projectId: projectId || undefined,
       });
       token = tokenData.data;
-    } catch (e) {
-      console.warn('Lỗi khi lấy push token:', e.message);
-      // Dự phòng token thiết bị
-      try {
-        const deviceToken = await Notifications.getDevicePushTokenAsync();
-        token = deviceToken.data;
-      } catch (err) {
-        token = 'Token_Simulated_' + Date.now();
-      }
+    } else {
+      token = 'Simulated_FCM_Token_' + Math.random().toString(36).substring(2, 10);
     }
-  } else {
-    // Nếu chạy trên Web / Emulator Snack
+  } catch (e) {
+    console.warn('Push token warning:', e.message);
     token = 'Simulated_FCM_Token_' + Math.random().toString(36).substring(2, 10);
   }
 
@@ -77,14 +68,14 @@ export async function registerForPushNotificationsAsync() {
 export async function savePushTokenToFirestore(userId, token) {
   if (!userId || !token) return;
   try {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      fcmToken: token,
-      updatedAt: new Date().toISOString(),
-    }).catch(async () => {
-      // Nếu document chưa tồn tại, tạo mới
-      await setDoc(userRef, { fcmToken: token, updatedAt: new Date().toISOString() }, { merge: true });
-    });
+    const userRef = db.collection('users').doc(userId);
+    await userRef.set(
+      {
+        fcmToken: token,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     console.error('Lỗi khi lưu FCM token vào Firestore:', error.message);
   }
@@ -93,7 +84,10 @@ export async function savePushTokenToFirestore(userId, token) {
 /**
  * Bắn một thông báo thử nghiệm trực tiếp trên máy (sau 1 giây)
  */
-export async function sendLocalTestNotification(title = '🔥 FCM Test Notification', body = 'Thông báo đẩy Firebase Cloud Messaging đã hoạt động thành công!') {
+export async function sendLocalTestNotification(
+  title = '🔥 FCM Test Notification',
+  body = 'Thông báo đẩy Firebase Cloud Messaging đã hoạt động thành công!'
+) {
   try {
     await Notifications.scheduleNotificationAsync({
       content: {

@@ -11,13 +11,10 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { signOut, updateProfile, updatePassword, updateEmail } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen({ user, isDemo, onLogout }) {
-  // State thông tin người dùng
   const [fullName, setFullName] = useState(user?.displayName || 'Người dùng');
   const [email, setEmail] = useState(user?.email || 'user@example.com');
   const [phone, setPhone] = useState('Chưa cập nhật');
@@ -31,18 +28,15 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
 
-  // Form edit states
   const [editFullName, setEditFullName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
 
-  // Password state
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
-  // Tải dữ liệu từ Firestore khi mở màn hình
   useEffect(() => {
     fetchUserData();
   }, [user]);
@@ -51,9 +45,8 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
     if (isDemo || !user?.uid) return;
     try {
       setLoading(true);
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      const docSnap = await db.collection('users').doc(user.uid).get();
+      if (docSnap.exists) {
         const data = docSnap.data();
         if (data.fullName) setFullName(data.fullName);
         if (data.email) setEmail(data.email);
@@ -77,7 +70,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
     setIsEditModalVisible(true);
   };
 
-  // Lưu thông tin cập nhật (Họ tên, Email, Số điện thoại, Địa chỉ)
   const handleSaveProfile = async () => {
     if (!editFullName.trim() || !editEmail.trim()) {
       Alert.alert('Lỗi', 'Họ tên và Email không được để trống.');
@@ -106,10 +98,9 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         updatedAt: new Date().toISOString(),
       };
 
-      // 1. Cập nhật Email nếu có thay đổi
       if (editEmail.trim() !== currentUser.email) {
         try {
-          await updateEmail(currentUser, editEmail.trim());
+          await currentUser.updateEmail(editEmail.trim());
           updates.email = editEmail.trim();
         } catch (emailErr) {
           if (emailErr.code === 'auth/requires-recent-login') {
@@ -123,17 +114,13 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         }
       }
 
-      // 2. Cập nhật Profile Firebase Auth
-      await updateProfile(currentUser, {
+      await currentUser.updateProfile({
         displayName: editFullName.trim(),
         photoURL: updates.photoURL,
       });
 
-      // 3. Cập nhật Firestore
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, updates);
+      await db.collection('users').doc(currentUser.uid).set(updates, { merge: true });
 
-      // Cập nhật State giao diện
       setFullName(updates.fullName);
       setEmail(editEmail.trim());
       setPhone(updates.phone);
@@ -150,7 +137,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
     }
   };
 
-  // Đổi mật khẩu
   const handleChangePassword = async () => {
     if (!newPassword || newPassword.length < 6) {
       Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
@@ -172,7 +158,7 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
     setLoading(true);
     try {
       const currentUser = auth.currentUser;
-      await updatePassword(currentUser, newPassword);
+      await currentUser.updatePassword(newPassword);
       setIsPasswordModalVisible(false);
       setNewPassword('');
       setConfirmNewPassword('');
@@ -200,7 +186,7 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         style: 'destructive',
         onPress: async () => {
           if (!isDemo) {
-            await signOut(auth);
+            await auth.signOut();
           }
           if (onLogout) onLogout();
         },
@@ -210,7 +196,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* User Header Card */}
       <View style={styles.profileCard}>
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         <Text style={styles.userName}>{fullName}</Text>
@@ -222,7 +207,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         </View>
       </View>
 
-      {/* Thông tin chi tiết */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
@@ -232,7 +216,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
           </TouchableOpacity>
         </View>
 
-        {/* Email */}
         <View style={styles.infoRow}>
           <View style={styles.infoIconBox}>
             <Ionicons name="mail-outline" size={20} color="#38bdf8" />
@@ -243,7 +226,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
           </View>
         </View>
 
-        {/* Số điện thoại */}
         <View style={styles.infoRow}>
           <View style={styles.infoIconBox}>
             <Ionicons name="call-outline" size={20} color="#34d399" />
@@ -254,7 +236,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
           </View>
         </View>
 
-        {/* Địa chỉ */}
         <View style={styles.infoRow}>
           <View style={styles.infoIconBox}>
             <Ionicons name="location-outline" size={20} color="#f472b6" />
@@ -266,7 +247,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         </View>
       </View>
 
-      {/* Hành động bảo mật */}
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Bảo mật & Tài khoản</Text>
 
@@ -296,7 +276,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         </TouchableOpacity>
       </View>
 
-      {/* MODAL: Chỉnh sửa thông tin */}
       <Modal visible={isEditModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -368,7 +347,6 @@ export default function ProfileScreen({ user, isDemo, onLogout }) {
         </View>
       </Modal>
 
-      {/* MODAL: Đổi mật khẩu */}
       <Modal visible={isPasswordModalVisible} animationType="fade" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

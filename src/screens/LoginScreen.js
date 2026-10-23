@@ -12,7 +12,6 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../config/firebase';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -41,7 +40,7 @@ export default function LoginScreen({ onNavigateRegister, onDemoLogin }) {
     setErrorMessage('');
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await auth.signInWithEmailAndPassword(email.trim(), password);
     } catch (error) {
       console.log('Login error:', error.code, error.message);
       let message = 'Đăng nhập thất bại. Vui lòng thử lại!';
@@ -159,7 +158,7 @@ export default function LoginScreen({ onNavigateRegister, onDemoLogin }) {
             )}
           </TouchableOpacity>
 
-          {/* Nút Demo (dành cho chấm bài / chạy thử ngay khi chưa cấu hình key) */}
+          {/* Nút Demo (dành cho chấm bài / chạy thử ngay) */}
           <TouchableOpacity
             style={styles.demoBtn}
             onPress={onDemoLogin}

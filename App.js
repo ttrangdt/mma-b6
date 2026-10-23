@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { onAuthStateChanged } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './src/config/firebase';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -26,12 +25,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'notifications'
 
   useEffect(() => {
-    // Đăng ký FCM Push Notification khi mở App
     registerForPushNotificationsAsync();
 
-    // Lắng nghe trạng thái đăng nhập Firebase
     if (isFirebaseConfigured()) {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const unsubscribe = auth.onAuthStateChanged((currentUser) => {
         if (!isDemo) {
           setUser(currentUser);
         }
@@ -43,7 +40,6 @@ export default function App() {
     }
   }, [isDemo]);
 
-  // Đăng nhập demo để chấm bài hoặc xem giao diện khi chưa điền API keys
   const handleDemoLogin = () => {
     setIsDemo(true);
     setUser({
@@ -70,7 +66,6 @@ export default function App() {
     );
   }
 
-  // Chưa đăng nhập: Hiển thị Đăng nhập hoặc Đăng ký
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -89,12 +84,10 @@ export default function App() {
     );
   }
 
-  // Đã đăng nhập: Giao diện chính với Navigation Bar
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
 
-      {/* Top App Bar */}
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
           <Ionicons name="flame" size={24} color="#f59e0b" />
@@ -105,7 +98,6 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* Main Screen Content */}
       <View style={styles.screenContent}>
         {activeTab === 'profile' ? (
           <ProfileScreen
@@ -118,7 +110,6 @@ export default function App() {
         )}
       </View>
 
-      {/* Bottom Navigation Bar */}
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={[styles.navItem, activeTab === 'profile' && styles.navItemActive]}
