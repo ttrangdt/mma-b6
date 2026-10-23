@@ -15,12 +15,12 @@ import { getFirestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCXaw_AU5Syrve8OE-ST4BscX_ZyiAX8wM",
+  authDomain: "mma301-b6-app.firebaseapp.com",
+  projectId: "mma301-b6-app",
+  storageBucket: "mma301-b6-app.firebasestorage.app",
+  messagingSenderId: "1036645070665",
+  appId: "1:1036645070665:web:c4e34ff6f502fe6a708c98"
 };
 
 // Kiểm tra xem người dùng đã điền Firebase Config thật hay chưa
