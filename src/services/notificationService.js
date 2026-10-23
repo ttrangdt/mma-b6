@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { db } from '../config/firebase';
 
-// Cấu hình cách ứng dụng hiển thị thông báo khi đang mở (Foreground)
+// Cấu hình hiển thị thông báo khi app đang mở (Foreground)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -52,11 +52,12 @@ export async function registerForPushNotificationsAsync() {
       });
       token = tokenData.data;
     } else {
-      token = 'Simulated_FCM_Token_' + Math.random().toString(36).substring(2, 10);
+      // Giả lập token khi chạy trên Web / Trình duyệt Snack
+      token = 'ExponentPushToken[Simulated_' + Math.random().toString(36).substring(2, 10) + ']';
     }
   } catch (e) {
     console.warn('Push token warning:', e.message);
-    token = 'Simulated_FCM_Token_' + Math.random().toString(36).substring(2, 10);
+    token = 'ExponentPushToken[Simulated_' + Math.random().toString(36).substring(2, 10) + ']';
   }
 
   return token;
@@ -82,13 +83,30 @@ export async function savePushTokenToFirestore(userId, token) {
 }
 
 /**
- * Bắn một thông báo thử nghiệm trực tiếp trên máy (sau 1 giây)
+ * Bắn một thông báo thử nghiệm trực tiếp trên máy
  */
 export async function sendLocalTestNotification(
   title = '🔥 FCM Test Notification',
   body = 'Thông báo đẩy Firebase Cloud Messaging đã hoạt động thành công!'
 ) {
   try {
+    // Nếu chạy trên Web / Browser (Expo Snack Web Preview)
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        if (window.Notification.permission === 'granted') {
+          new window.Notification(title, { body });
+        } else if (window.Notification.permission !== 'denied') {
+          const perm = await window.Notification.requestPermission();
+          if (perm === 'granted') {
+            new window.Notification(title, { body });
+          }
+        }
+      } catch (webErr) {
+        console.log('Web browser notification note:', webErr);
+      }
+    }
+
+    // Lên lịch bắn thông báo qua Expo Notifications
     await Notifications.scheduleNotificationAsync({
       content: {
         title,
