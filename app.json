@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Firebase User & FCM App",
+    "slug": "firebase-user-fcm-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1e293b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ttrang.firebasefcm"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1e293b"
+      },
+      "package": "com.ttrang.firebasefcm",
+      "useNextNotificationsApi": true
+    },
+    "web": {
+      "favicon": "https://img.icons8.com/color/96/firebase.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#f59e0b"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "firebase-user-fcm-demo"
+      }
+    }
+  }
+}
