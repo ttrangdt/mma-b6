@@ -1,9 +1,7 @@
 // =========================================================================
 // FIREBASE CONFIGURATION (Compatible with Expo Snack & React Native)
 // =========================================================================
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/firestore';
+import firebase from 'firebase';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCXaw_AU5Syrve8OE-ST4BscX_ZyiAX8wM",
